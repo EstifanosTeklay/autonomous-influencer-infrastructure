@@ -1,0 +1,108 @@
+id: social_publisher
+version: 1.0.0
+name: Social Publisher
+description: |
+  Publishes content to multiple social media platforms with
+  platform-specific formatting and AI disclosure compliance.
+
+category: engagement
+author: Project Chimera Team
+created_at: "2026-02-05T00:00:00Z"
+updated_at: "2026-02-05T00:00:00Z"
+
+# Input schema
+input_schema:
+  type: object
+  required:
+    - platforms
+    - content
+    - agent_id
+  properties:
+    platforms:
+      type: array
+      items:
+        type: string
+        enum: ["twitter", "instagram", "tiktok", "linkedin"]
+      description: "Target platforms for publication"
+      example: ["twitter", "instagram"]
+    content:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          description: "Caption or post text"
+        media_urls:
+          type: array
+          items:
+            type: string
+          description: "URLs of images/videos to attach"
+        hashtags:
+          type: array
+          items:
+            type: string
+          description: "Hashtags to include"
+    agent_id:
+      type: string
+      description: "ID of the agent publishing"
+      example: "chimera_fashion_eth_001"
+    schedule_time:
+      type: string
+      format: date-time
+      description: "Optional scheduled publish time (null = immediate)"
+    ai_disclosure:
+      type: boolean
+      description: "Whether to add AI disclosure label"
+      default: true
+
+# Output schema
+output_schema:
+  type: object
+  required:
+    - publications
+    - total_cost_usd
+  properties:
+    publications:
+      type: array
+      items:
+        type: object
+        properties:
+          platform:
+            type: string
+          post_id:
+            type: string
+          url:
+            type: string
+          published_at:
+            type: string
+            format: date-time
+          status:
+            type: string
+            enum: ["success", "failed", "scheduled"]
+    total_cost_usd:
+      type: number
+      description: "Total cost of all API calls"
+
+# MCP dependencies
+mcp_servers:
+  required:
+    - twitter  # Twitter API wrapper
+    - instagram  # Instagram API wrapper
+  optional:
+    - tiktok
+    - linkedin
+
+# Resource requirements
+resources:
+  estimated_cost_usd: 0.0  # API calls are typically free
+  avg_execution_time_ms: 3000
+  requires_api_keys:
+    - TWITTER_API_KEY
+    - INSTAGRAM_API_KEY
+
+# Constraints
+constraints:
+  rate_limit: 30/hour  # Platform-dependent
+  max_retries: 2
+  timeout_seconds: 20

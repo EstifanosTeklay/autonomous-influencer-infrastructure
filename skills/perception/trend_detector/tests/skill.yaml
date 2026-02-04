@@ -1,0 +1,79 @@
+id: trend_detector
+version: 1.0.0
+name: Trend Detector
+description: |
+  Detects trending topics in a specific niche by analyzing
+  news sources, social media, and search trends.
+
+category: perception
+author: Project Chimera Team
+created_at: "2026-02-05T00:00:00Z"
+updated_at: "2026-02-05T00:00:00Z"
+
+# Input schema (what the skill expects)
+input_schema:
+  type: object
+  required:
+    - niche
+    - time_window
+  properties:
+    niche:
+      type: string
+      description: "Topic area to monitor (e.g., 'Ethiopian fashion')"
+      example: "sustainable fashion"
+    time_window:
+      type: string
+      enum: ["1h", "6h", "24h", "7d"]
+      description: "How far back to look for trends"
+      default: "24h"
+    min_relevance:
+      type: number
+      minimum: 0.0
+      maximum: 1.0
+      description: "Minimum relevance score (0.0-1.0)"
+      default: 0.75
+
+# Output schema (what the skill returns)
+output_schema:
+  type: object
+  required:
+    - trends
+    - retrieved_at
+  properties:
+    trends:
+      type: array
+      items:
+        type: object
+        properties:
+          topic:
+            type: string
+          relevance_score:
+            type: number
+          source:
+            type: string
+          url:
+            type: string
+    retrieved_at:
+      type: string
+      format: date-time
+
+# MCP dependencies
+mcp_servers:
+  required:
+    - news  # News aggregation MCP server
+  optional:
+    - twitter  # For social listening
+    - weaviate  # For semantic filtering
+
+# Resource requirements
+resources:
+  estimated_cost_usd: 0.002  # Per execution
+  avg_execution_time_ms: 1500
+  requires_api_keys:
+    - NEWSAPI_KEY
+
+# Constraints
+constraints:
+  rate_limit: 100/hour
+  max_retries: 3
+  timeout_seconds: 10
