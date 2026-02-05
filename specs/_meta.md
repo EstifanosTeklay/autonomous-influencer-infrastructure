@@ -4,6 +4,19 @@
 **Last Updated:** February 5, 2026  
 **Status:** Active Development
 
+This is the master specification document for **Project Chimera**, an infrastructure system for managing autonomous AI influencers at scale.
+
+**Key purposes:**
+
+1. **Architecture Blueprint** — Defines the swarm-based system (Planner-Worker-Judge pattern) with MCP abstraction layers
+2. **Design Principles** — Establishes spec-driven development, security boundaries, cost management, and compliance guardrails
+3. **Development Roadmap** — Maps out 6 weeks of phased delivery, from foundation through scaling
+4. **Success Metrics** — Sets targets for autonomy (70% human-free execution), quality (<15% rejection), economics (>40% profit margin), and scalability (1,000+ agents)
+5. **Tech Stack Reference** — Documents tools (Python, pydantic-ai, Weaviate, Coinbase AgentKit, Kubernetes)
+6. **Governance & Terminology** — Clarifies roles, processes, and terminology to avoid miscommunication
+
+**Bottom line:** It's the "constitution" of the project—a single source of truth to keep development aligned as you build and scale the system.
+
 ---
 
 ## 1. Project Vision
@@ -356,3 +369,34 @@ When working with Cursor/Claude Code:
 - **Owner:** Estifanos Teklay
 - **Review Cycle:** Daily during Phase 1
 - **Next Review:** After functional.md completion
+
+
+This is a comprehensive master specification document for **Project Chimera**, an autonomous AI influencer infrastructure system. Here's what it does:
+
+**Core Function:**
+Acts as the "constitution" — a single source of truth defining how a fleet of autonomous AI agents will be built, operated, and scaled.
+
+**Key Sections:**
+
+1. **Vision & Problem** — Establishes the end goal (1000+ autonomous virtual influencers) and why existing systems fail
+
+2. **Architectural Principles** — Sets non-negotiable design patterns:
+    - Spec-driven development (specs before code)
+    - Swarm architecture (Planner-Worker-Judge roles)
+    - MCP abstraction layers (all external interactions isolated)
+    - Economic agency (crypto wallets)
+    - Human-in-the-loop governance (confidence-based routing)
+
+3. **Constraints** — Defines hard boundaries around compliance, costs, security, and platform volatility
+
+4. **Success Metrics** — Quantifies targets for autonomy (70%), quality (<15% rejection), profit (>40% margin), and scale (1000+ agents)
+
+5. **Development Roadmap** — Maps 6-week phased rollout from foundation through scaling
+
+6. **Tech Stack** — Documents all tools (Python, pydantic-ai, Weaviate, Coinbase, Kubernetes, etc.)
+
+7. **Terminology** — Clarifies roles and concepts to prevent miscommunication
+
+8. **Governance** — Establishes change control and decision authority
+
+**Purpose:** Prevents technical debt, hallucinations, and scope creep by defining *what* and *why* before *how*. It's designed to align solo development with AI coding assistants.

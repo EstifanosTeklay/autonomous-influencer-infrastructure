@@ -154,3 +154,9 @@ CMD ["/bin/bash"]
 #   docker run --rm --env-file .env project-chimera:latest
 #
 # ============================================================================
+# In dependencies stage - fix uv usage:
+RUN uv pip install --system --no-cache "$(cat pyproject.toml | grep -A 100 '^\[project\]')"
+
+# Or use requirements.txt instead:
+COPY requirements.txt .
+RUN uv pip install --system --no-cache -r requirements.txt
