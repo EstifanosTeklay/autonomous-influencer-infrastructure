@@ -1,0 +1,346 @@
+# ============================================================================
+# Project Chimera: CodeRabbit AI Code Review Configuration
+# ============================================================================
+# AI-powered code review that checks for:
+#   - Spec alignment (does code match specs?)
+#   - Security vulnerabilities
+#   - Code quality issues
+#   - Best practices adherence
+#
+# Documentation: https://docs.coderabbit.ai/
+# ============================================================================
+
+# CodeRabbit version (use latest)
+version: 2
+
+# ==============================================================================
+# Review Settings
+# ==============================================================================
+
+reviews:
+  # Auto-review on every PR
+  auto_review:
+    enabled: true
+    drafts: false  # Don't review draft PRs
+  
+  # Request changes vs. comment
+  request_review: false  # Don't request changes, just comment
+  
+  # Review scope
+  path_filters:
+    # Include these paths
+    include:
+      - "src/**"
+      - "tests/**"
+      - "specs/**"
+      - "skills/**"
+    
+    # Exclude these paths
+    exclude:
+      - "**/*.md"
+      - "docs/**"
+      - ".github/**"
+      - "*.txt"
+  
+  # Line-by-line review vs. summary
+  review_style: "line_by_line"
+
+# ==============================================================================
+# Project-Specific Rules
+# ==============================================================================
+
+custom_rules:
+  # Rule 1: Spec Alignment Check
+  - id: "spec-alignment"
+    name: "Specification Alignment"
+    description: "Verify code implements requirements from specs/"
+    severity: "warning"
+    patterns:
+      # Flag if implementing swarm components without spec reference
+      - pattern: "class.*Agent"
+        message: "Does this agent implementation align with specs/functional.md or specs/technical.md? Reference the spec requirement (e.g., FR-AGENT-001)"
+      
+      # Flag if creating tasks without proper schema
+      - pattern: "AgentTask"
+        message: "Verify AgentTask follows schema in specs/technical.md Section 3.1"
+      
+      # Flag if using MCP without proper abstraction
+      - pattern: "import (tweepy|requests|urllib)"
+        message: "⚠️ Direct API calls detected. Use MCP abstraction layer instead (see specs/_meta.md Section 2.3)"
+  
+  # Rule 2: Test Coverage
+  - id: "test-coverage"
+    name: "Test Coverage Requirement"
+    description: "New features must have corresponding tests"
+    severity: "error"
+    patterns:
+      - pattern: "def (decompose_goal|execute|validate)"
+        message: "Does this new method have a test in tests/functional/? (TDD approach)"
+  
+  # Rule 3: Security
+  - id: "security-secrets"
+    name: "No Hardcoded Secrets"
+    description: "Secrets must use environment variables"
+    severity: "error"
+    patterns:
+      - pattern: "(api_key|API_KEY|password|PASSWORD|secret|SECRET)\\s*=\\s*['\"](?!\\$|os\\.environ)"
+        message: "🚨 Potential hardcoded secret detected! Use environment variables: os.environ.get('API_KEY')"
+      
+      - pattern: "sk-[a-zA-Z0-9]{32,}"
+        message: "🚨 Possible API key in code! Remove and use .env file"
+  
+  # Rule 4: Type Hints
+  - id: "type-hints"
+    name: "Type Hints Required"
+    description: "All functions must have type hints"
+    severity: "warning"
+    patterns:
+      - pattern: "def \\w+\\([^)]*\\)(?!\\s*->)"
+        message: "Add type hints and return type annotation"
+  
+  # Rule 5: Docstrings
+  - id: "docstrings"
+    name: "Docstrings Required"
+    description: "Public functions must have docstrings"
+    severity: "info"
+    patterns:
+      - pattern: "def [a-z]\\w+\\([^)]*\\):\\s*[^\"']"
+        message: "Consider adding a docstring explaining what this function does"
+
+# ==============================================================================
+# Language-Specific Settings
+# ==============================================================================
+
+language_settings:
+  python:
+    # Python version
+    version: "3.11"
+    
+    # Style guide
+    style_guide: "pep8"
+    
+    # Linters to reference
+    linters:
+      - "black"
+      - "ruff"
+      - "mypy"
+    
+    # Max line length
+    max_line_length: 100
+    
+    # Naming conventions
+    naming_conventions:
+      function: "snake_case"
+      class: "PascalCase"
+      constant: "UPPER_CASE"
+      variable: "snake_case"
+
+# ==============================================================================
+# Review Focus Areas
+# ==============================================================================
+
+focus_areas:
+  # High priority review areas
+  - name: "Spec Compliance"
+    description: "Verify implementation matches specifications"
+    weight: 10
+    checks:
+      - "Does this code implement a requirement from specs/functional.md?"
+      - "Does the data structure match specs/technical.md schemas?"
+      - "Are MCP abstractions used correctly per specs/_meta.md?"
+  
+  - name: "Test Coverage"
+    description: "Ensure tests exist for new code"
+    weight: 9
+    checks:
+      - "Are there tests for this new functionality?"
+      - "Do tests reference the spec requirement (e.g., FR-AGENT-001)?"
+      - "Are edge cases covered?"
+  
+  - name: "Security"
+    description: "Check for security vulnerabilities"
+    weight: 10
+    checks:
+      - "Are API keys and secrets properly handled?"
+      - "Is input validation present?"
+      - "Are there any SQL injection risks?"
+      - "Is error handling secure (not leaking sensitive info)?"
+  
+  - name: "Architecture"
+    description: "Verify architectural patterns are followed"
+    weight: 8
+    checks:
+      - "Does this follow the Planner-Worker-Judge pattern?"
+      - "Are agents stateless where required?"
+      - "Is MCP abstraction layer respected?"
+      - "Are skills following the interface contract?"
+  
+  - name: "Code Quality"
+    description: "General code quality and maintainability"
+    weight: 7
+    checks:
+      - "Are variable names descriptive?"
+      - "Is the function complexity reasonable?"
+      - "Are there code smells (duplicated code, long methods)?"
+      - "Is error handling comprehensive?"
+
+# ==============================================================================
+# Review Prompts (Custom Instructions for CodeRabbit AI)
+# ==============================================================================
+
+review_prompts:
+  system_prompt: |
+    You are reviewing code for Project Chimera, an autonomous AI influencer infrastructure.
+    
+    CRITICAL CONTEXT:
+    - This project follows Spec-Driven Development (SDD)
+    - All code MUST align with specifications in specs/ directory
+    - Tests are written BEFORE implementation (TDD approach)
+    - All external interactions MUST use MCP abstraction layer
+    
+    REVIEW PRIORITIES (in order):
+    1. Spec Alignment - Does code match specs/functional.md and specs/technical.md?
+    2. Security - No hardcoded secrets, proper input validation
+    3. Test Coverage - New code must have tests
+    4. Architecture - Follow Planner-Worker-Judge pattern
+    5. Code Quality - Type hints, docstrings, clarity
+    
+    REFERENCE DOCUMENTS:
+    - specs/_meta.md - Architectural principles and constraints
+    - specs/functional.md - User stories and acceptance criteria
+    - specs/technical.md - API contracts and schemas
+    - CLAUDE.md - AI assistant rules and conventions
+    
+    When suggesting changes:
+    - Reference specific spec sections (e.g., "See specs/technical.md Section 3.1")
+    - Explain WHY the change matters for the project goals
+    - Be constructive and educational
+  
+  pr_summary_prompt: |
+    Provide a summary of this PR:
+    
+    1. SPEC ALIGNMENT:
+       - Which spec requirements does this implement? (cite FR-*, technical.md sections)
+       - Are all acceptance criteria met?
+    
+    2. TEST COVERAGE:
+       - Are there tests for the new functionality?
+       - Do tests follow TDD pattern (failing before implementation)?
+    
+    3. ARCHITECTURE:
+       - Does this follow Project Chimera's patterns?
+       - Any deviations from specs/_meta.md principles?
+    
+    4. SECURITY:
+       - Any secrets or credentials in code?
+       - Input validation present?
+    
+    5. RECOMMENDATIONS:
+       - What could be improved?
+       - Any technical debt introduced?
+
+# ==============================================================================
+# Comment Settings
+# ==============================================================================
+
+comments:
+  # How to collapse comments
+  collapse_comments: false
+  
+  # Comment tone
+  tone: "constructive"
+  
+  # Include code suggestions
+  include_suggestions: true
+  
+  # Max comments per PR
+  max_comments: 50
+
+# ==============================================================================
+# Integration Settings
+# ==============================================================================
+
+integrations:
+  # GitHub Actions integration
+  github_actions:
+    enabled: true
+    check_name: "CodeRabbit Review"
+  
+  # Slack notifications (optional)
+  slack:
+    enabled: false
+    # webhook_url: "https://hooks.slack.com/..."
+
+# ==============================================================================
+# Ignore Patterns
+# ==============================================================================
+
+ignore:
+  # Don't review these files
+  paths:
+    - "*.md"
+    - "*.txt"
+    - "*.json"
+    - ".env*"
+    - "LICENSE"
+  
+  # Don't review these changes
+  patterns:
+    - "version bump"
+    - "merge branch"
+    - "update dependencies"
+
+# ==============================================================================
+# Example Review Comments (What CodeRabbit Will Say)
+# ==============================================================================
+#
+# Example 1: Spec Alignment Issue
+# ```python
+# class PlannerAgent:
+#     def decompose_goal(self, goal: str):
+#         tasks = []
+#         # ... implementation
+# ```
+# 
+# 💬 CodeRabbit: "Does this implementation follow specs/functional.md 
+# FR-SWARM-001? According to the spec, the Planner should:
+# - Generate task DAG (directed acyclic graph)
+# - Include unique task_id for each task
+# - Push tasks to Redis queue
+# - Monitor queue depth
+# 
+# Consider referencing the spec in a comment and ensuring all acceptance 
+# criteria are met."
+#
+# Example 2: Security Issue
+# ```python
+# TWITTER_API_KEY = "abc123xyz"
+# ```
+#
+# 💬 CodeRabbit: "🚨 Hardcoded API key detected! This violates security 
+# best practices. Use environment variables instead:
+# 
+# ```python
+# import os
+# TWITTER_API_KEY = os.environ.get('TWITTER_API_KEY')
+# if not TWITTER_API_KEY:
+#     raise EnvironmentError('TWITTER_API_KEY not set')
+# ```
+#
+# See specs/_meta.md Section 3.3 (Security Boundaries) for more details."
+#
+# Example 3: Missing Tests
+# ```python
+# def execute_task(self, task: AgentTask):
+#     # New implementation
+# ```
+#
+# 💬 CodeRabbit: "This looks like new functionality. According to the TDD 
+# approach in specs/_meta.md, tests should be written first. Do we have 
+# corresponding tests in tests/functional/? 
+#
+# Consider adding:
+# - tests/functional/test_worker.py with test_execute_task()
+# - Tests should reference the relevant spec requirement"
+#
+# ==============================================================================
