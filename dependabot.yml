@@ -1,0 +1,189 @@
+# ============================================================================
+# Project Chimera: Dependabot Configuration
+# ============================================================================
+# Automated dependency updates for:
+#   - Python packages (pip)
+#   - Docker images
+#   - GitHub Actions
+#
+# Documentation: https://docs.github.com/en/code-security/dependabot
+# ============================================================================
+
+version: 2
+
+updates:
+  # ==========================================================================
+  # Python Dependencies (pip)
+  # ==========================================================================
+  
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    
+    # Open PRs only for these types of updates
+    open-pull-requests-limit: 5
+    
+    # Semantic versioning strategy
+    versioning-strategy: "increase"
+    
+    # Commit message prefix
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    
+    # Reviewers (optional - add your GitHub username)
+    # reviewers:
+    #   - "your-github-username"
+    
+    # Labels to add to PRs
+    labels:
+      - "dependencies"
+      - "python"
+    
+    # Group updates by type
+    groups:
+      # Critical security updates - immediate
+      security:
+        patterns:
+          - "*"
+        update-types:
+          - "security"
+      
+      # LLM providers - group together
+      llm-providers:
+        patterns:
+          - "anthropic"
+          - "openai"
+          - "google-*"
+        update-types:
+          - "minor"
+          - "patch"
+      
+      # Data layer - group together
+      data-layer:
+        patterns:
+          - "redis"
+          - "psycopg*"
+          - "sqlalchemy"
+          - "weaviate-client"
+        update-types:
+          - "minor"
+          - "patch"
+      
+      # Development tools - group together
+      dev-tools:
+        patterns:
+          - "pytest*"
+          - "black"
+          - "ruff"
+          - "mypy"
+        update-types:
+          - "minor"
+          - "patch"
+    
+    # Ignore specific dependencies
+    ignore:
+      # Pin to specific version (if needed)
+      # - dependency-name: "pydantic"
+      #   versions: ["3.x"]
+
+  # ==========================================================================
+  # Docker Images
+  # ==========================================================================
+  
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "09:00"
+      timezone: "UTC"
+    
+    open-pull-requests-limit: 3
+    
+    commit-message:
+      prefix: "docker"
+    
+    labels:
+      - "dependencies"
+      - "docker"
+    
+    # Group Docker updates
+    groups:
+      docker-images:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # ==========================================================================
+  # GitHub Actions
+  # ==========================================================================
+  
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "09:00"
+      timezone: "UTC"
+    
+    open-pull-requests-limit: 3
+    
+    commit-message:
+      prefix: "ci"
+    
+    labels:
+      - "dependencies"
+      - "github-actions"
+    
+    # Group GitHub Actions updates
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+# ==============================================================================
+# Update Strategy
+# ==============================================================================
+#
+# Dependabot will:
+# 1. Check for updates weekly on specified days
+# 2. Group related updates to reduce PR noise
+# 3. Create PRs with descriptive titles and changelogs
+# 4. Automatically rebase PRs if base branch changes
+#
+# Manual Actions Required:
+# 1. Review and merge Dependabot PRs
+# 2. Run tests before merging (CI will do this automatically)
+# 3. Check for breaking changes in major version updates
+#
+# Security Updates:
+# - Critical security updates get separate PRs immediately
+# - Review and merge ASAP
+#
+# ==============================================================================
+
+# ==============================================================================
+# Example Dependabot PRs
+# ==============================================================================
+#
+# Security Update:
+# Title: "deps: Bump pydantic from 2.7.0 to 2.7.4"
+# Body: "Bumps pydantic from 2.7.0 to 2.7.4. This update includes security fixes."
+# Labels: dependencies, python, security
+#
+# Grouped Update:
+# Title: "deps: Update llm-providers dependencies"
+# Body: "Updates anthropic, openai, and google-generativeai"
+# Labels: dependencies, python
+#
+# ==============================================================================
