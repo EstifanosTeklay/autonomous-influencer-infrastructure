@@ -160,17 +160,6 @@ project-chimera/
 │   ├── technical.md           # Schemas, APIs, implementation
 │   └── openclaw_integration.md # Agent network protocols
 ├── src/                        # Source code (to be implemented)
-│   ├── swarm/                 # Agent components
-│   │   ├── planner.py        # Planner agent
-│   │   ├── worker.py         # Worker agent
-│   │   └── judge.py          # Judge agent
-│   ├── schemas/               # Pydantic data models
-│   │   ├── task.py           # AgentTask schema
-│   │   └── result.py         # AgentResult schema
-│   ├── orchestrator/          # Control plane
-│   │   ├── main.py           # Orchestrator service
-│   │   └── skill_registry.py # Skill management
-│   └── mcp/                   # MCP client wrappers
 ├── tests/                      # Test suite (TDD approach)
 │   ├── functional/            # Functional requirement tests
 │   │   ├── test_planner.py   # FR-SWARM-001
@@ -519,32 +508,6 @@ All implementation must align with:
 - [ ] Wallet management
 - [ ] Multi-agent orchestration
 
-### Roadmap
-
-**Phase 1: Foundation (Week 1)** ← We are here
-- ✅ Complete specifications
-- ✅ TDD test suite
-- ✅ Docker infrastructure
-- ✅ CI/CD pipeline
-
-**Phase 2: Intelligence (Week 2-3)**
-- Implement swarm agents
-- MCP integrations
-- Content generation
-- Social platform posting
-
-**Phase 3: Commerce (Week 4)**
-- Wallet management
-- Transaction approval
-- Financial dashboard
-
-**Phase 4: Scale (Week 5-6)**
-- Multi-agent orchestration
-- OpenClaw integration
-- Production deployment
-
----
-
 ## 🎯 Success Metrics
 
 ### Velocity Metrics
@@ -612,10 +575,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 ## 📞 Contact & Support
-
-- **Issues:** [GitHub Issues](https://github.com/YOUR-USERNAME/project-chimera/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/YOUR-USERNAME/project-chimera/discussions)
-- **Email:** your.email@example.com
+- **Loon Video:**(https://www.loom.com/share/80b1f41054a14d28a2fe90dd46c7797b)
+- **Issues:** [GitHub Issues](https://github.com/EstifanosTeklay/project-chimera/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/EstifanosTeklay/project-chimera/discussions)
+- **Email:** estifanosteklay1@gmail.com
 
 ---
 
