@@ -1,0 +1,22 @@
+# Traceability mapping: acceptance feature -> functional tests
+planner.feature:
+  fr_codes: [FR-SWARM-001]
+  tests:
+    - tests/functional/test_planner.py::TestPlannerTaskDecomposition::test_planner_creates_tasks_from_simple_goal
+    - tests/functional/test_planner.py::TestPlannerTaskDecomposition::test_planner_estimates_task_costs
+
+worker.feature:
+  fr_codes: [FR-SWARM-002]
+  tests:
+    - tests/functional/test_planner.py::TestWorkerInterface::test_worker_pops_and_executes
+
+judge.feature:
+  fr_codes: [FR-SWARM-003]
+  tests:
+    - tests/functional/test_planner.py::TestJudgeDecisionLogic::test_judge_routes_based_on_confidence
+
+frontend.feature:
+  fr_codes: [FR-FRONTEND-001]
+  tests:
+    - tests/functional/test_skills_interface.py::TestSkillInterface::test_skill_has_yaml_metadata
+    - tests/functional/test_task_schema.py::TestAgentTaskSchema::test_task_creation_with_minimal_fields

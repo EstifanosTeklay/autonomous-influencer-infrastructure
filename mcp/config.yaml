@@ -1,0 +1,28 @@
+# MCP configuration for local/dev environment
+# Define MCP servers and tool endpoints used by agents
+
+mcp_servers:
+  - name: trend_detector
+    host: http://localhost:9001
+    tools:
+      - name: detect_trends
+        description: Returns trending topics for a given query
+        endpoint: /v1/detect_trends
+
+  - name: social_publisher
+    host: http://localhost:9002
+    tools:
+      - name: publish_post
+        description: Publish text/media to platform
+        endpoint: /v1/publish
+
+  - name: memory_store
+    host: http://localhost:9003
+    tools:
+      - name: store_memory
+        description: Persist memory into Weaviate via MCP bridge
+        endpoint: /v1/store_memory
+
+defaults:
+  timeout_seconds: 15
+  retries: 2

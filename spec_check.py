@@ -43,7 +43,7 @@ class SpecChecker:
             return
 
         for spec_file in spec_files:
-            with open(spec_file, "r") as f:
+            with open(spec_file, "r", encoding="utf-8") as f:
                 content = f.read()
 
             # Check for main heading
@@ -73,7 +73,7 @@ class SpecChecker:
             return
 
         try:
-            with open(spec_file, "r") as f:
+            with open(spec_file, "r", encoding="utf-8") as f:
                 config = json.load(f)
 
             required_keys = ["specDirectory", "files"]
@@ -106,7 +106,7 @@ class SpecChecker:
             self.log_error("ADR.md not found")
             return
 
-        with open(adr_file, "r") as f:
+        with open(adr_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Count ADRs
@@ -146,7 +146,7 @@ class SpecChecker:
                 continue
             
             found = True
-            with open(path, "r") as f:
+            with open(path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             checklist = {
@@ -175,7 +175,7 @@ class SpecChecker:
             self.log_warning("MCP_INTERACTION_LOG.md not found")
             return
 
-        with open(mcp_file, "r") as f:
+        with open(mcp_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Check for JSON blocks
@@ -223,7 +223,7 @@ class SpecChecker:
         spec_mentions = {}
         
         for spec_file in specs_dir.glob("*.md"):
-            with open(spec_file, "r") as f:
+            with open(spec_file, "r", encoding="utf-8") as f:
                 content = f.read()
                 # Look for file references like `src/swarm/planner.py`
                 files = re.findall(r"`([src|tests][^`]*\.py)`", content)
@@ -263,7 +263,7 @@ class SpecChecker:
 
         total_tests = 0
         for test_file in test_files:
-            with open(test_file, "r") as f:
+            with open(test_file, "r", encoding="utf-8") as f:
                 content = f.read()
                 tests = len(re.findall(r"def test_", content))
                 total_tests += tests
@@ -318,8 +318,36 @@ class SpecChecker:
         self.check_mcp_logs()
         self.check_spec_code_alignment()
         self.check_test_spec_alignment()
+        self.check_mcp_config()
 
         return self.print_summary()
+
+    def check_mcp_config(self):
+        """Validate presence and basic schema of mcp/config.yaml"""
+        print("\n[8] Checking MCP configuration...")
+        mcp_path = Path('mcp') / 'config.yaml'
+        if not mcp_path.exists():
+            self.log_warning('mcp/config.yaml not found')
+            return
+
+        try:
+            import yaml
+            with open(mcp_path, 'r', encoding='utf-8') as f:
+                cfg = yaml.safe_load(f)
+        except Exception as e:
+            self.log_error(f'mcp/config.yaml parse error: {e}')
+            return
+
+        if 'mcp_servers' not in cfg or not isinstance(cfg['mcp_servers'], list):
+            self.log_error('mcp/config.yaml missing mcp_servers list')
+            return
+
+        for s in cfg['mcp_servers']:
+            if not all(k in s for k in ('name', 'host', 'tools')):
+                self.log_error(f"MCP server entry missing required keys: {s}")
+                return
+
+        self.log_pass('mcp/config.yaml schema looks good')
 
 
 if __name__ == "__main__":
