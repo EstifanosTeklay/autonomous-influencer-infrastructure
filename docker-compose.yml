@@ -1,0 +1,242 @@
+# ============================================================================
+# Project Chimera: Docker Compose Configuration
+# ============================================================================
+# Orchestrates all services needed for development and testing:
+# - Redis (task queues)
+# - PostgreSQL (structured data)
+# - Weaviate (semantic memory)
+# - Orchestrator (main application)
+# - Worker (agent execution)
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # ==========================================================================
+  # Data Layer Services
+  # ==========================================================================
+  
+  redis:
+    image: redis:7.2-alpine
+    container_name: chimera-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - chimera-network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: chimera-postgres
+    environment:
+      POSTGRES_DB: chimera
+      POSTGRES_USER: chimera
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-chimera_dev_password}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chimera"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chimera-network
+
+  weaviate:
+    image: semitechnologies/weaviate:1.25.0
+    container_name: chimera-weaviate
+    ports:
+      - "8080:8080"
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      ENABLE_MODULES: 'text2vec-openai'
+      OPENAI_APIKEY: ${OPENAI_API_KEY:-your_openai_key_here}
+      DEFAULT_VECTORIZER_MODULE: 'text2vec-openai'
+      CLUSTER_HOSTNAME: 'weaviate'
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/.well-known/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chimera-network
+
+  # ==========================================================================
+  # Application Services
+  # ==========================================================================
+
+  orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: chimera-orchestrator
+    command: python -m src.orchestrator.main
+    environment:
+      # Database connections
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://chimera:${POSTGRES_PASSWORD:-chimera_dev_password}@postgres:5432/chimera
+      - WEAVIATE_URL=http://weaviate:8080
+      
+      # API Keys (load from .env file)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      
+      # Application config
+      - ENVIRONMENT=development
+      - LOG_LEVEL=DEBUG
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Mount source code for hot reload
+      - ./src:/app/src
+      - ./specs:/app/specs
+      - ./agents:/app/agents
+      - ./skills:/app/skills
+      
+      # Mount logs
+      - ./logs:/app/logs
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      weaviate:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - chimera-network
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    command: python -m src.swarm.worker
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - WEAVIATE_URL=http://weaviate:8080
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ENVIRONMENT=development
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - ./src:/app/src
+      - ./skills:/app/skills
+      - ./logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+      weaviate:
+        condition: service_healthy
+    deploy:
+      replicas: 3  # Run 3 worker instances for parallel execution
+    networks:
+      - chimera-network
+
+  # ==========================================================================
+  # Testing Service
+  # ==========================================================================
+
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: chimera-test
+    command: pytest tests/ -v --cov=src --cov-report=html --cov-report=term
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://chimera:${POSTGRES_PASSWORD:-chimera_dev_password}@postgres:5432/chimera_test
+      - WEAVIATE_URL=http://weaviate:8080
+      - ENVIRONMENT=test
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./specs:/app/specs
+      - ./skills:/app/skills
+      - ./htmlcov:/app/htmlcov
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      weaviate:
+        condition: service_healthy
+    networks:
+      - chimera-network
+    profiles:
+      - test  # Only start this with: docker-compose --profile test up
+
+# ==============================================================================
+# Volumes (Persistent Data)
+# ==============================================================================
+
+volumes:
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+  weaviate_data:
+    driver: local
+
+# ==============================================================================
+# Networks
+# ==============================================================================
+
+networks:
+  chimera-network:
+    driver: bridge
+
+# ==============================================================================
+# Usage Instructions
+# ==============================================================================
+#
+# Start all services:
+#   docker-compose up -d
+#
+# Start with logs:
+#   docker-compose up
+#
+# Stop all services:
+#   docker-compose down
+#
+# Stop and remove volumes (clean slate):
+#   docker-compose down -v
+#
+# View logs:
+#   docker-compose logs -f orchestrator
+#   docker-compose logs -f worker
+#
+# Run tests:
+#   docker-compose --profile test up test
+#
+# Access individual services:
+#   docker-compose exec orchestrator /bin/bash
+#   docker-compose exec redis redis-cli
+#   docker-compose exec postgres psql -U chimera -d chimera
+#
+# Scale workers:
+#   docker-compose up --scale worker=5 -d
+#
+# Rebuild after code changes:
+#   docker-compose build
+#   docker-compose up -d
+#
+# ==============================================================================
