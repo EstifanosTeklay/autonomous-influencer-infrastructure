@@ -318,6 +318,7 @@ class SpecChecker:
         self.check_mcp_logs()
         self.check_spec_code_alignment()
         self.check_test_spec_alignment()
+        self.check_security_docs()
         self.check_mcp_config()
 
         return self.print_summary()
@@ -348,6 +349,43 @@ class SpecChecker:
                 return
 
         self.log_pass('mcp/config.yaml schema looks good')
+
+    def check_security_docs(self):
+        """Ensure basic security documentation and ADR exist"""
+        print("\n[9] Checking Security Documentation...")
+
+        sec_file = Path('SECURITY.md')
+        docs_dir = Path('docs') / 'security'
+        adr_file = Path('docs') / 'ADR-015-security.md'
+
+        if sec_file.exists():
+            self.log_pass('SECURITY.md present')
+        else:
+            self.log_error('SECURITY.md not found - add docs/SECURITY.md')
+
+        if docs_dir.exists() and any(docs_dir.glob('*.md')):
+            self.log_pass('docs/security/ contains security artifacts')
+        else:
+            self.log_warning('docs/security/ missing or empty - add detailed guides')
+
+        if adr_file.exists():
+            self.log_pass('ADR-015 (security) present in docs/')
+        else:
+            # allow ADRs in ADR.md too; warn if neither exists
+            adr_main = Path('ADR.md')
+            found_in_main = False
+            if adr_main.exists():
+                try:
+                    with open(adr_main, 'r', encoding='utf-8') as f:
+                        if 'ADR-015' in f.read():
+                            found_in_main = True
+                except Exception:
+                    pass
+
+            if found_in_main:
+                self.log_pass('ADR-015 found in ADR.md')
+            else:
+                self.log_warning('ADR-015 not found; add docs/ADR-015-security.md or ADR.md entry')
 
 
 if __name__ == "__main__":
