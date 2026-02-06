@@ -1,0 +1,9 @@
+{
+  "specDirectory": "specs",
+  "files": {
+    "meta": "_meta.md",
+    "functional": "functional.md",
+    "technical": "technical.md",
+    "openclaw": "openclaw_integration.md"
+  }
+}
