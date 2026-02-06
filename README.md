@@ -118,7 +118,7 @@ graph TB
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/YOUR-USERNAME/project-chimera.git
+git clone https://github.com/EstifanosTeklay/project-chimera.git
 cd project-chimera
 
 # 2. Run automated setup
