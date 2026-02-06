@@ -492,12 +492,164 @@ Use **Weaviate**.
 | 008 | Non-Custodial Wallets | Accepted | High |
 | 009 | PostgreSQL vs MongoDB | Accepted | Medium |
 | 010 | Weaviate vs Pinecone | Accepted | Medium |
+| 011 | React + TypeScript + Tailwind | Accepted | High |
+| 012 | Agent State Machine | Accepted | High |
+| 013 | MCP Sense Logs as Artifact | Accepted | Critical |
+| 014 | Agent Learning via Memory | Proposed | Medium |
+
+---
+
+## ADR-011: React + TypeScript + Tailwind for Dashboard Frontend
+
+**Date**: 2026-02-06  
+**Status**: Accepted  
+
+### Context
+Network Operators monitor agents, campaigns, and HITL queue via dashboard. Need performant, type-safe frontend.
+
+### Decision
+Use **React 18+ with TypeScript and Tailwind CSS**.
+- **Vite** for build (5x faster than webpack)
+- **TanStack Query** for server state
+- **Zustand** for dashboard state
+- **React Hook Form + Zod** for forms
+
+### Consequences
+**Positive**: Rapid development, type safety, mature ecosystem, component reusability  
+**Negative**: Larger bundle size, Node.js dependency
+
+---
+
+## ADR-012: Agent Lifecycle as State Machine for Observability
+
+**Date**: 2026-02-06  
+**Status**: Accepted  
+
+### Context
+Current: tasks have status (pending, in_progress, complete). Missing: agent-level lifecycle visibility for debugging and auditing.
+
+### Decision
+Define strict **Agent State Machine** with logged transitions:
+```
+CREATED → INITIALIZING → ACTIVE → QUIET → PAUSED → ARCHIVED
+                          ↓       ↓      ↑
+                      LEARNING ←────────┘
+```
+
+Each transition logged with timestamp, trigger reason, and metrics snapshot (tasks completed, avg confidence, cost efficiency, error patterns).
+
+### Consequences
+**Positive**: Complete audit trail, easier debugging, enables alerting, supports "agent rewind"  
+**Negative**: Increased logging/storage overhead
+
+---
+
+## ADR-013: MCP Sense Logs as First-Class Artifact
+
+**Date**: 2026-02-06  
+**Status**: Accepted  
+
+### Context
+How do we capture agent decision-making? How do we demonstrate transparency to auditors? Current MCP_INTERACTION_LOG.md is subjective and not machine-parseable.
+
+### Decision
+Implement **MCP Sense Protocol** with structured JSON logging:
+- Every MCP tool call logged with params/result
+- Agent decision traces logged
+- Logs are machine-parseable and queryable
+- Enables "agent replay" (exact reproduction)
+
+Storage tiers:
+- **Short-term**: Redis (7 days, query index)
+- **Long-term**: PostgreSQL (queryable archive)
+- **Public**: MCP_SENSE_LOG.md (human-readable digest)
+
+Structure:
+```json
+{
+  "session_id": "uuid",
+  "agent_id": "chimera_fashion_eth_001",
+  "timestamp": "2026-02-06T15:30:00Z",
+  "event": "mcp_tool_call",
+  "tool": "trend_detector",
+  "params": {"query": "sustainable fashion", "window": 7},
+  "result": {...},
+  "duration_ms": 234,
+  "confidence": 0.87
+}
+```
+
+### Consequences
+**Positive**: Full transparency, reproducible traces, auditable, regulatory compliant  
+**Negative**: Privacy concerns (need redaction), storage overhead, query API complexity
+
+---
+
+## ADR-014: Agent Learning Via Memory Consolidation
+
+**Date**: 2026-02-06  
+**Status**: Proposed  
+
+### Context
+Agents execute thousands of tasks. Without learning mechanisms, they repeat mistakes and miss strategic improvement. How can agents improve long-term?
+
+### Decision
+**Memory Consolidation Pattern** (leverages existing Weaviate infrastructure):
+
+**Phase 1 - Active**: Worker stores memories as it executes
+- Successful post → tagged "successful_post" with engagement score
+- Failed post → tagged "failed_post" with failure analysis
+- New pattern discovered → tagged "learned_pattern"
+
+**Phase 2 - Consolidation**: Judge review triggers learning signal
+- High-confidence successful posts → memory.importance_score += 0.1
+- Rejected posts → memory.importance_score -= 0.1
+- Similar patterns → merge/deduplicate
+
+**Phase 3 - Retrieval**: Planning leverages learned memories
+- Planner queries: "posts about coffee that performed well?"
+- Weaviate returns top memories via semantic search
+- Planner includes in task context → Worker has examples
+
+Result: Agent naturally improves because it remembers what worked.
+
+### Example Workflow
+```
+Day 1: Post about Ethiopian coffee → 500 likes (success)
+       Memory stored: "Coffee posts with cultural story → high engagement"
+
+Day 15: Planner planning new coffee post
+        Queries: "What do I know about coffee posts?"
+        Retrieves: Day 1 memory (high importance)
+        Includes in context: "Remember: storytelling approach works"
+        
+Worker generates new post using learned strategy
+Result: 600 likes (improvement)
+```
+
+### Consequences
+**Positive**: 
+- Agents continuously improve without fine-tuning
+- Transparent (humans can read memories)
+- Leverages existing infrastructure
+- Cross-platform consistency (shared memories)
+
+**Negative**: 
+- Memories can become stale (outdated strategies)
+- Requires careful memory curation/cleanup
+- Risk of amplifying errors (if bad memory has high importance)
+
+**Experiments**:
+- A/B test: agent with memory vs. agent without
+- Measure: engagement metrics, task success rate, cost efficiency
+- Hypothesis: Agent with memory should show 15%+ improvement in engagement by week 4
 
 ---
 
 ## Decision-Making Process
 
 **How decisions are made**:
+
 1. Identify architectural question
 2. Research options (read docs, test prototypes)
 3. Document tradeoffs in ADR format
@@ -520,5 +672,5 @@ Use **Weaviate**.
 ---
 
 **Last Updated**: February 6, 2026  
-**Total ADRs**: 10  
+**Total ADRs**: 14 (13 Accepted, 1 Proposed)  
 **Next Review**: After Phase 1 implementation complete

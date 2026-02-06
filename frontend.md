@@ -1,10 +1,11 @@
 # Frontend Specification - Project Chimera Dashboard
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Last Updated:** February 6, 2026  
+**Status:** Concrete UI Specification (Phase 1)  
 **Framework:** React 18+ with TypeScript  
+**Build:** Vite 5.0+  
 **Styling:** Tailwind CSS  
-**State Management:** React Context + TanStack Query  
 
 ---
 
@@ -43,6 +44,21 @@ Real-time:
   - Server-Sent Events (SSE): Live agent updates
   - WebSocket: Optional for Phase 2
 ```
+
+| **Technology** | **Version** | **Purpose** |
+| --- | --- | --- |
+| React | 18.2+ | Component-based UI |
+| TypeScript | 5.0+ | Type safety |
+| Vite | 5.0+ | Fast dev server & build |
+| Tailwind CSS | 3.4+ | Utility-first styling |
+| Zustand | 4.5+ | Light state management |
+| TanStack Query | 5.0+ | Server state & caching |
+| React Router | 6.20+ | Client-side routing |
+| React Hook Form | 7.5+ | Efficient forms |
+| Zod | 3.22+ | Runtime schema validation |
+| Recharts | 2.11+ | Agent performance charts |
+| Lucide React | 0.292+ | Consistent icons |
+| Server-Sent Events | Browser native | Live agent updates |
 
 ### 1.2 Application Structure
 
@@ -181,6 +197,22 @@ interface AgentCardData {
 GET /api/v1/dashboard/metrics
 Response: FleetMetrics
 
+├── src/components/agents/AgentCard.tsx          # Agent summary
+├── src/components/agents/AgentDetail.tsx        # Full agent detail
+├── src/components/agents/AgentMetrics.tsx       # Charts
+├── src/components/agents/AgentTimeline.tsx      # Activity log
+├── src/components/campaigns/CampaignForm.tsx    # CRUD form
+├── src/components/campaigns/BudgetTracker.tsx   # Budget viz
+├── src/components/hitl/ReviewQueue.tsx          # HITL list
+├── src/components/hitl/ReviewCard.tsx           # Review item
+├── src/components/hitl/ContentPreview.tsx       # Artifact preview
+├── src/components/ui/                           # Reusable primitives
+├── src/pages/Dashboard.tsx                      # Home
+├── src/pages/AgentsPage.tsx                     # Agent management
+├── src/pages/CampaignsPage.tsx                  # Campaign mgmt
+├── src/pages/HITLQueuePage.tsx                  # Review queue
+├── src/pages/AnalyticsPage.tsx                  # Reporting
+├── src/pages/SettingsPage.tsx                   # Configuration
 GET /api/v1/agents?status=active
 Response: AgentCardData[]
 
