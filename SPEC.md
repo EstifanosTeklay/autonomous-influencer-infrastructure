@@ -746,5 +746,4 @@ VITE_AUTH_ENABLED=true
 - Voice commands for reviews
 - AR preview for content
 - Multi-language support
-- White-label customization
-
+- White-label customizatio
